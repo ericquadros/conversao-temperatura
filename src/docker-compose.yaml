@@ -1,0 +1,50 @@
+# passo a passo
+# 1 crie os arquivo dockerfile com as definições > docker build -t valterlafuente/conversao-temperatura:v1 .
+
+# 2 envie a imagem com a nome clatura correta para o docker hub > docker push valterlafuente/conversao-temperatura:v1
+
+# 3 crie uma network para fazer a conexão dos container > docker network create conversao-temperatura-net
+
+# 4 crie um volume para não perde os dados > docker volume create postgres-vol
+# 5 crei o container do postgres > docker container run -d -p 5432:5432 -e POSTGRES_PASSWORD=jr123 -e POSTGRES_USER=kubelafuente -e POSTGRES_DB=kubelafuente --network conversao-temperatura-net --name postgres -v postgres-vol:/var/lib/postgresql/data postgres
+
+# 6 crie o contaoner da aplicação >  docker container run -d -p 8080:8080 -e POSTGRES_PASSWORD=jr123 -e POSTGRES_USER=kubelafuente -e POSTGRES_DB=kubelafuente -e DB_HOST=postgres  --network conversao-temperatura-net valterlafuentejr/conversao-temperatura:v1
+
+# no final ainda criei o docker-compose.yaml
+
+version: "3.8"
+
+volumes:
+  postgres-vol:
+
+networks:
+  conversao-temperatura-net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    networks:
+      - conversao-temperatura-net
+    volumes:
+      - postgres-vol:/var/libpostgresql/data
+    environment:
+      - POSTGRES_PASSWORD=kubeericq123
+      - POSTGRES_USER=kubeericq
+      - POSTGRES_DB=kubeericq
+
+  web:
+    image: ericquadros/conversao-temperatura:v1
+    ports:
+      - 8080:8080
+    networks:
+      - conversao-temperatura-net
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_PASSWORD=kubeericq123
+      - POSTGRES_USER=kubeericq
+      - POSTGRES_DB=kubeericq
+      - DB_HOST=postgres
